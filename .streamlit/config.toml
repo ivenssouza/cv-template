@@ -1,0 +1,5 @@
+[server]
+enableCORS = false
+enableXsrfProtection = false
+baseUrlPath = "cv-template"
+port = 8501
