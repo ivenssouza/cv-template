@@ -176,38 +176,38 @@ with st.container(border=True):
         st.session_state.experiencias.append(new_id)
         st.session_state.experiencia_counter += 1  # Garante unicidade dos próximos IDs
 
-# Lista auxiliar para experiências a serem removidas
-experiencia_remover_ids = []
+    # Lista auxiliar para experiências a serem removidas
+    experiencia_remover_ids = []
 
-# Renderiza cada bloco de experiência já adicionado
-for i in st.session_state.experiencias:
-    # Recupera o valor atual do campo "Empresa", se já existir
-    key_empresa = f"ExperienciaEmpresa-{i}"
-    key_cargo = f"ExperienciaCargo-{i}"
-    empresa_nome = st.session_state.get(key_empresa)
-    cargo_nome = st.session_state.get(key_cargo)
-    exp = ""
-    if empresa_nome and cargo_nome:
-        exp = empresa_nome + " - " + cargo_nome
+    # Renderiza cada bloco de experiência já adicionado
+    for i in st.session_state.experiencias:
+        # Recupera o valor atual do campo "Empresa", se já existir
+        key_empresa = f"ExperienciaEmpresa-{i}"
+        key_cargo = f"ExperienciaCargo-{i}"
+        empresa_nome = st.session_state.get(key_empresa)
+        cargo_nome = st.session_state.get(key_cargo)
+        exp = ""
+        if empresa_nome and cargo_nome:
+            exp = empresa_nome + " - " + cargo_nome
 
-    with st.expander(label=exp or "Empresa - Cargo", expanded=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.text_input("Início", key=f"ExperienciaInicio-{i}")
+        with st.expander(label=exp or "Empresa - Cargo", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.text_input("Início", key=f"ExperienciaInicio-{i}")
 
-        with col2:
-            st.text_input("Fim", key=f"ExperienciaFim-{i}")
-        
-        col3, col4 = st.columns(2)
-        col3.text_input("Cargo", key=key_cargo)
-        col4.text_input("Empresa", key=key_empresa)
-        
-        experiencia_descricao = st.text_area("Descrição", key=f"ExperienciaDescricao-{i}")
+            with col2:
+                st.text_input("Fim", key=f"ExperienciaFim-{i}")
+            
+            col3, col4 = st.columns(2)
+            col3.text_input("Cargo", key=key_cargo)
+            col4.text_input("Empresa", key=key_empresa)
+            
+            experiencia_descricao = st.text_area("Descrição", key=f"ExperienciaDescricao-{i}")
 
-        # Botão de remover experiência
-        b0, b1 = st.columns([10,1])
-        if b1.button("", key=f"ExperienciaRemover-{i}", icon=":material/delete:"):
-            experiencia_remover_ids.append(i)
+            # Botão de remover experiência
+            b0, b1 = st.columns([10,1])
+            if b1.button("", key=f"ExperienciaRemover-{i}", icon=":material/delete:"):
+                experiencia_remover_ids.append(i)
 
 # Remove as experiências marcadas
 if experiencia_remover_ids:
@@ -223,37 +223,44 @@ if experiencia_remover_ids:
 # ----------------------------------------------------------------------------------------------------
 if "habilidades" not in st.session_state:
     st.session_state.habilidades = []
+if "limpar_habilidade" not in st.session_state:
+    st.session_state.limpar_habilidade = False
 
-if "habilidade_counter" not in st.session_state:
-    st.session_state.habilidade_counter = 0
+# Limpa o campo de entrada se a flag estiver ativada
+if st.session_state.limpar_habilidade:
+    st.session_state.limpar_habilidade = False
+    nova_habilidade = ""
+else:
+    nova_habilidade = st.session_state.get("NovaHabilidade", "")
 
 with st.container(border=True):
-    h0, h1 = st.columns([10,1])
-    h0.header("Habilidades")
+    st.header("Habilidades")
 
-    if h1.button("", icon=":material/add:", key="habilidade"):
-        new_id = st.session_state.habilidade_counter
-        st.session_state.habilidades.append(new_id)
-        st.session_state.habilidade_counter += 1
+    h0, h1 = st.columns([7,1])
+    nova_habilidade = h0.text_input("Digite o nome da certificação", value=nova_habilidade, key="NovaHabilidade", label_visibility='collapsed')
 
-habilidade_remover_ids = []
+    with h1:
+        # st.markdown("<br>", unsafe_allow_html=True)  # empurra o botão para baixo
+        if st.button("", icon=":material/add:", key="habilidade"):
+            if nova_habilidade.strip():
+                st.session_state.habilidades.append(nova_habilidade.strip())
+                st.session_state.limpar_habilidade = True
+                st.rerun()  # força a interface a recarregar e limpar o campo
+            # else:
+            #     st.warning("Digite o nome da certificação antes de adicionar.")
 
-for i in st.session_state.habilidades:
-    with st.container(border=True):
-        st.text_input("Habilidade", key=f"Habilidade-{i}")
+    # Exibe lista de certificações com botão de remover
+    with st.expander(label=f"Habilidades ({st.session_state.habilidades.__len__()})", expanded=True):
+        if st.session_state.habilidades:
+            for idx, habi in enumerate(st.session_state.habilidades):
 
-        b0, b1 = st.columns([10,1])
-        if b1.button("", key=f"HabilidadeRemover-{i}", icon=":material/delete:"):
-            habilidade_remover_ids.append(i)
-
-if habilidade_remover_ids:
-    for rid in habilidade_remover_ids:
-        st.session_state.habilidades.remove(rid)
-        for campo in ["Habilidade"]:
-            key = f"{campo}-{rid}"
-            if key in st.session_state:
-                del st.session_state[key]
-    st.rerun()
+                b0, b1 = st.columns([7,1])
+                b0.write(f"- {habi}")
+                
+                # Botão Remover
+                if b1.button("", key=f"RemoverHabi-{idx}", icon=":material/delete:"):
+                    st.session_state.habilidades.pop(idx)
+                    st.rerun()
 
 # ----------------------------------------------------------------------------------------------------
 if "educacao" not in st.session_state:
@@ -271,21 +278,29 @@ with st.container(border=True):
         st.session_state.educacao.append(new_id)
         st.session_state.educacao_counter += 1
 
-educacao_remover_ids = []
+    educacao_remover_ids = []
 
-for i in st.session_state.educacao:
-    with st.container(border=True):
-        col1, col2 = st.columns(2)
-        educacaoInicio = col1.text_input("Inicio", key=f"EducacaoInicio-{i}")
-        educacaoFim = col2.text_input("Fim", key=f"EducacaoFim-{i}")
-        
-        col3, col4 = st.columns(2)
-        educacaoCargo = col3.text_input("Curso", key=f"EducacaoCurso-{i}")
-        educacaoInstituicao = col4.text_input("Instituição", key=f"EducacaoInstituicao-{i}")
+    for i in st.session_state.educacao:
+        # Recupera o valor atual do campo "Empresa", se já existir
+        key_curso = f"EducacaoCurso-{i}"
+        key_instituicao = f"EducacaoInstituicao-{i}"
+        curso_nome = st.session_state.get(key_curso)
+        instituicao_nome = st.session_state.get(key_instituicao)
+        exp = ""
+        if curso_nome and instituicao_nome:
+            exp = curso_nome + " - " + instituicao_nome
+        with st.expander(label=exp or "Curso - Instituição", expanded=True):
+            col1, col2 = st.columns(2)
+            educacaoInicio = col1.text_input("Inicio", key=f"EducacaoInicio-{i}")
+            educacaoFim = col2.text_input("Fim", key=f"EducacaoFim-{i}")
+            
+            col3, col4 = st.columns(2)
+            educacaoCargo = col3.text_input("Curso", key=f"EducacaoCurso-{i}")
+            educacaoInstituicao = col4.text_input("Instituição", key=f"EducacaoInstituicao-{i}")
 
-        b0, b1 = st.columns([10,1])
-        if b1.button("", key=f"EducacaoRemover-{i}", icon=":material/delete:"):
-            educacao_remover_ids.append(i)
+            b0, b1 = st.columns([10,1])
+            if b1.button("", key=f"EducacaoRemover-{i}", icon=":material/delete:"):
+                educacao_remover_ids.append(i)
 
 if educacao_remover_ids:
     for rid in educacao_remover_ids:
@@ -299,74 +314,91 @@ if educacao_remover_ids:
 # ----------------------------------------------------------------------------------------------------
 if "certificacoes" not in st.session_state:
     st.session_state.certificacoes = []
+if "limpar_certificacao" not in st.session_state:
+    st.session_state.limpar_certificacao = False
 
-if "certificacao_counter" not in st.session_state:
-    st.session_state.certificacao_counter = 0
+# Limpa o campo de entrada se a flag estiver ativada
+if st.session_state.limpar_certificacao:
+    st.session_state.limpar_certificacao = False
+    nova_certificacao = ""
+else:
+    nova_certificacao = st.session_state.get("NovaCertificacao", "")
 
 with st.container(border=True):
-    h0, h1 = st.columns([10,1])
-    h0.header("Certificações / Cursos")
+    st.header("Certificações / Cursos")
 
-    if h1.button("", icon=":material/add:", key="certificado"):
-        new_id = st.session_state.certificacao_counter
-        st.session_state.certificacoes.append(new_id)
-        st.session_state.certificacao_counter += 1
+    h0, h1 = st.columns([7,1])
+    nova_certificacao = h0.text_input("Digite o nome da certificação", value=nova_certificacao, key="NovaCertificacao", label_visibility='collapsed')
 
-certificacao_remover_ids = []
+    with h1:
+        # st.markdown("<br>", unsafe_allow_html=True)  # empurra o botão para baixo
+        if st.button("", icon=":material/add:", key="certificado"):
+            if nova_certificacao.strip():
+                st.session_state.certificacoes.append(nova_certificacao.strip())
+                st.session_state.limpar_certificacao = True
+                st.rerun()  # força a interface a recarregar e limpar o campo
+            # else:
+            #     st.warning("Digite o nome da certificação antes de adicionar.")
 
-for i in st.session_state.certificacoes:
-    with st.container(border=True):
-        st.text_input("Certificado", key=f"CertificadoCertificado-{i}")
+    # Exibe lista de certificações com botão de remover
+    with st.expander(label=f"Certificações ({st.session_state.certificacoes.__len__()})", expanded=True):
+        if st.session_state.certificacoes:
+            for idx, cert in enumerate(st.session_state.certificacoes):
+                
+                b0, b1 = st.columns([7,1])
+                b0.write(f"- {cert}")
 
-        b0, b1 = st.columns([10,1])
-        if b1.button("", key=f"CertificadoRemover-{i}", icon=":material/delete:"):
-            certificacao_remover_ids.append(i)
-
-if certificacao_remover_ids:
-    for rid in certificacao_remover_ids:
-        st.session_state.certificacoes.remove(rid)
-        for campo in ["Certificado"]:
-            key = f"Certificado{campo}-{rid}"
-            if key in st.session_state:
-                del st.session_state[key]
-    st.rerun()
+                # Botão Remover
+                if b1.button("", key=f"RemoverCert-{idx}", icon=":material/delete:"):
+                    st.session_state.certificacoes.pop(idx)
+                    st.rerun()
 
 # ----------------------------------------------------------------------------------------------------
 if "idiomas" not in st.session_state:
     st.session_state.idiomas = []
+if "limpar_idioma" not in st.session_state:
+    st.session_state.limpar_idioma = False
 
-if "idioma_counter" not in st.session_state:
-    st.session_state.idioma_counter = 0
+# Limpa o campo de entrada se a flag estiver ativada
+if st.session_state.limpar_idioma:
+    st.session_state.limpar_idioma = False
+    idiomaLingua = ""
+    idiomaNivel = ""
+else:
+    idiomaLingua = st.session_state.get("idiomaLingua", "")
+    idiomaNivel = st.session_state.get("idiomaNivel", "")
+    
 
 with st.container(border=True):
-    h0, h1 = st.columns([10,1])
-    h0.header("Idiomas")
+    st.header("Idiomas")
 
-    if h1.button("", icon=":material/add:", key="idioma"):
-        new_id = st.session_state.idioma_counter
-        st.session_state.idiomas.append(new_id)
-        st.session_state.idioma_counter += 1
+    h0, h1, h2 = st.columns([4,3,1])
+    idiomaLingua = h0.text_input("Lingua", value=idiomaLingua, key="idiomaLingua")
+    idiomaNivel = h1.text_input("Nivel", value=idiomaNivel, key="idiomaNivel")
 
-idioma_remover_ids = []
+    with h2:
+        st.markdown("<br>", unsafe_allow_html=True)  # empurra o botão para baixo
+        if st.button("", icon=":material/add:", key="idioma"):
+            if idiomaLingua.strip() and idiomaNivel.strip():
+                st.session_state.idiomas.append(idiomaLingua.strip() + " - " + idiomaNivel.strip())
+                st.session_state.limpar_idioma = True
+                st.rerun()  # força a interface a recarregar e limpar o campo
+            # else:
+            #     st.warning("Digite o nome da certificação antes de adicionar.")
 
-for i in st.session_state.idiomas:
-    with st.container(border=True):
-        col1, col2 = st.columns(2)
-        idiomaLingua = col1.text_input("Linguaa", key=f"IdiomaLingua-{i}")
-        idiomaNivel = col2.text_input("Nivel", key=f"IdiomaNivel-{i}")
+    # Exibe lista de certificações com botão de remover
+    with st.expander(label=f"Idiomas ({st.session_state.idiomas.__len__()})", expanded=True):
+        if st.session_state.idiomas:
+            for idx, idi in enumerate(st.session_state.idiomas):
+                
+                b0, b1 = st.columns([7,1])
+                b0.write(f"- {idi}")
 
-        b0, b1 = st.columns([10,1])
-        if b1.button("", key=f"IdiomaRemover-{i}", icon=":material/delete:"):
-            idioma_remover_ids.append(i)
-
-if idioma_remover_ids:
-    for rid in idioma_remover_ids:
-        st.session_state.idiomas.remove(rid)
-        for campo in ["Lingua","Nivel"]:
-            key = f"Idioma{campo}-{rid}"
-            if key in st.session_state:
-                del st.session_state[key]
-    st.rerun()
+                # Botão Remover
+                if b1.button("", key=f"RemoverIdi-{idx}", icon=":material/delete:"):
+                    st.session_state.idiomas.pop(idx)
+                    st.rerun()
+                
 # ----------------------------------------------------------------------------------------------------
 
 st.markdown("---")
@@ -391,7 +423,7 @@ if st.button("Gerar PDF", icon=":material/picture_as_pdf:"):
 
     for i in st.session_state.habilidades:
         item = {
-            "habilidade": st.session_state.get(f"Habilidade-{i}"),
+            "habilidade": i,
         }
         habilidades.append(item)
     
@@ -406,18 +438,17 @@ if st.button("Gerar PDF", icon=":material/picture_as_pdf:"):
     
     for i in st.session_state.certificacoes:
         item = {
-            "certificado": st.session_state.get(f"CertificadoCertificado-{i}")
+            "certificado": i
         }
         certificados.append(item)
     
     for i in st.session_state.idiomas:
         item = {
-            "lingua": st.session_state.get(f"IdiomaLingua-{i}"),
-            "nivel": st.session_state.get(f"IdiomaNivel-{i}"),
+            "idioma": i,
         }
         idiomas.append(item)
 
-    doc = DocxTemplate('iem_base.docx')
+    doc = DocxTemplate('template.docx')
 
     context = {
         'vaga': vaga,
@@ -431,17 +462,17 @@ if st.button("Gerar PDF", icon=":material/picture_as_pdf:"):
         'idiomas': idiomas
     }
 
+    # st.markdown("---")
+    # st.subheader("Dados preenchidos:")
+    # st.write(context)
+    # st.markdown("---")
+
 
     tmpdirname = make_tempdir()
 
     doc.render(context)
     doc.save(f"{tmpdirname}\{vaga}_{nome_candidato}.docx")
     # doc.save(f"{vaga}_{nome_candidato}.docx")
-
-    # st.markdown("---")
-    # st.subheader("Dados preenchidos:")
-    # st.write(context)
-    # st.markdown("---")
 
     
     with st.spinner('Converting file...'):
